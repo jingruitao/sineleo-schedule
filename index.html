@@ -12,130 +12,220 @@
             background-color: #f5f5f5;
         }
 
-        .month-header {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #monthPicker {
-            padding: 8px 15px;
-            border: 2px solid #007AFF;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        .day-card {
+        .calendar-container {
             background: white;
             border-radius: 12px;
-            margin-bottom: 10px;
             padding: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .day-header {
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .calendar-nav button {
+            padding: 8px 12px;
+            border: none;
+            background: #007AFF;
+            color: white;
+            border-radius: 6px;
+            margin: 0 5px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day {
+            min-height: 100px;
+            border: 1px solid #eee;
+            padding: 8px;
+            position: relative;
+            background: white;
+        }
+
+        .day-number {
+            position: absolute;
+            top: 3px;
+            right: 5px;
+            color: #666;
+        }
+
+        .event-item {
+            background: #e3f2fd;
+            padding: 5px;
+            margin: 3px 0;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .event-time {
             color: #007AFF;
             font-weight: bold;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        .time-slot {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
+        .delete-btn {
+            color: #ff3b30;
+            float: right;
+            background: none;
+            border: none;
+            padding: 0 5px;
         }
 
-        input[type="time"], input[type="text"] {
-            flex: 1;
+        .add-event-form {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 5px;
+        }
+
+        input, select {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 6px;
         }
 
-        .add-btn {
-            background-color: #34C759;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 480px) {
-            .time-slot {
-                flex-direction: column;
+        @media (max-width: 600px) {
+            .calendar-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            
+            .calendar-day {
+                min-height: auto;
             }
         }
     </style>
 </head>
 <body>
-    <div class="month-header">
-        <input type="month" id="monthPicker" value="2024-07">
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h2 id="currentMonth">2024年7月</h2>
+            <div class="calendar-nav">
+                <button onclick="changeMonth(-1)">←</button>
+                <button onclick="changeMonth(1)">→</button>
+            </div>
+        </div>
+        
+        <div class="calendar-grid" id="calendar"></div>
     </div>
 
-    <div id="calendar"></div>
-
     <script>
-        // 初始化数据
-        let scheduleData = {};
-
-        // 月份选择监听
-        document.getElementById('monthPicker').addEventListener('change', function() {
-            generateCalendar(new Date(this.value));
-        });
+        let currentDate = new Date();
+        let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || {};
 
         // 生成日历
         function generateCalendar(date) {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
-
+            
             const year = date.getFullYear();
             const month = date.getMonth();
-            const days = new Date(year, month + 1, 0).getDate();
+            document.getElementById('currentMonth').textContent = `${year}年${month + 1}月`;
 
-            for (let day = 1; day <= days; day++) {
-                const dayDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-                const dayCard = document.createElement('div');
-                dayCard.className = 'day-card';
-                dayCard.innerHTML = `
-                    <div class="day-header">
-                        <span>${dayDate}</span>
-                        <button class="add-btn" onclick="addTimeSlot('${dayDate}')">+ 添加时段</button>
-                    </div>
-                    <div id="slots-${dayDate}"></div>
-                `;
-                
-                calendar.appendChild(dayCard);
-                loadDaySchedule(dayDate);
+            // 生成日期数据
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            
+            // 生成日历网格
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                calendar.appendChild(createEmptyDay());
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                calendar.appendChild(createDayElement(year, month, day));
             }
         }
 
-        // 添加时间段
-        function addTimeSlot(dayDate) {
-            const container = document.getElementById(`slots-${dayDate}`);
-            const slot = document.createElement('div');
-            slot.className = 'time-slot';
-            slot.innerHTML = `
-                <input type="time">
-                <input type="text" placeholder="学生姓名">
-                <input type="text" placeholder="上课地点">
-                <input type="text" placeholder="课程内容">
+        // 创建单个日期元素
+        function createDayElement(year, month, day) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayEvents = scheduleData[dateStr] || [];
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.innerHTML = `
+                <div class="day-number">${day}</div>
+                <div class="day-events" id="events-${dateStr}">
+                    ${dayEvents.map(event => `
+                        <div class="event-item">
+                            <button class="delete-btn" onclick="deleteEvent('${dateStr}', ${event.id})">×</button>
+                            <span class="event-time">${event.time}</span>
+                            <div>${event.student}</div>
+                            <small>${event.location}</small>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="add-event-form">
+                    <input type="time" id="time-${dateStr}">
+                    <input type="text" placeholder="姓名" id="student-${dateStr}">
+                    <button onclick="addEvent('${dateStr}')">+</button>
+                </div>
             `;
-            container.appendChild(slot);
+            
+            return dayElement;
         }
 
-        // 加载某天课程
-        function loadDaySchedule(dayDate) {
-            // 这里可以添加加载逻辑
+        // 添加课程
+        function addEvent(dateStr) {
+            const time = document.getElementById(`time-${dateStr}`).value;
+            const student = document.getElementById(`student-${dateStr}`).value;
+            
+            if (!time || !student) return;
+
+            const newEvent = {
+                id: Date.now(),
+                time,
+                student,
+                location: document.getElementById(`location-${dateStr}`)?.value || '',
+                content: document.getElementById(`content-${dateStr}`)?.value || ''
+            };
+
+            scheduleData[dateStr] = [...(scheduleData[dateStr] || []), newEvent];
+            saveData();
+            refreshDay(dateStr);
+        }
+
+        // 删除课程
+        function deleteEvent(dateStr, eventId) {
+            scheduleData[dateStr] = scheduleData[dateStr]?.filter(e => e.id !== eventId);
+            saveData();
+            refreshDay(dateStr);
+        }
+
+        // 保存数据
+        function saveData() {
+            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+        }
+
+        // 其他辅助函数
+        function createEmptyDay() {
+            const div = document.createElement('div');
+            div.className = 'calendar-day empty';
+            return div;
+        }
+
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            generateCalendar(currentDate);
+        }
+
+        function refreshDay(dateStr) {
+            const dayElement = document.querySelector(`#events-${dateStr}`).parentElement;
+            const newElement = createDayElement(
+                ...dateStr.split('-').map(Number),
+                dayElement.querySelector('.day-number').textContent
+            );
+            dayElement.parentElement.replaceChild(newElement, dayElement);
         }
 
         // 初始化
-        generateCalendar(new Date());
+        generateCalendar(currentDate);
     </script>
 </body>
 </html>
