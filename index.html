@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一对一物理课程表</title>
+    <title>物理课程日历</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -12,159 +12,130 @@
             background-color: #f5f5f5;
         }
 
-        .week-selector {
+        .month-header {
             margin-bottom: 15px;
             display: flex;
+            align-items: center;
             gap: 10px;
         }
 
-        .week-btn {
+        #monthPicker {
             padding: 8px 15px;
-            border: none;
+            border: 2px solid #007AFF;
             border-radius: 8px;
-            background-color: #007AFF;
-            color: white;
+            font-size: 16px;
         }
 
-        .schedule-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
+        .day-card {
+            background: white;
             border-radius: 12px;
-            overflow: hidden;
+            margin-bottom: 10px;
+            padding: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            font-weight: 500;
+        .day-header {
+            color: #007AFF;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .time-slot {
-            position: relative;
-        }
-
-        .edit-btn {
-            padding: 6px 12px;
-            background-color: #34C759;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            float: right;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         input[type="time"], input[type="text"] {
-            width: 100%;
+            flex: 1;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            box-sizing: border-box;
+        }
+
+        .add-btn {
+            background-color: #34C759;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
         }
 
         @media (max-width: 480px) {
-            th {
-                display: none;
-            }
-            
-            td {
-                display: block;
-                padding: 10px;
-            }
-            
-            td::before {
-                content: attr(data-label);
-                float: left;
-                font-weight: bold;
-                margin-right: 10px;
+            .time-slot {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
-    <div class="week-selector">
-        <select class="week-btn" id="weekSelect">
-            <option value="1">第1周</option>
-            <option value="2">第2周</option>
-            <option value="3">第3周</option>
-            <option value="4">第4周</option>
-        </select>
+    <div class="month-header">
+        <input type="month" id="monthPicker" value="2024-07">
     </div>
 
-    <table class="schedule-table">
-        <thead>
-            <tr>
-                <th>时间</th>
-                <th>学生姓名</th>
-                <th>上课地点</th>
-                <th>课程内容</th>
-            </tr>
-        </thead>
-        <tbody id="scheduleBody">
-            <!-- 示例数据 -->
-            <tr>
-                <td data-label="时间">
-                    <input type="time" value="16:00">
-                </td>
-                <td data-label="学生">
-                    <input type="text" placeholder="姓名">
-                </td>
-                <td data-label="地点">
-                    <input type="text" placeholder="地址">
-                </td>
-                <td data-label="内容">
-                    <input type="text" placeholder="课程主题">
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div id="calendar"></div>
 
     <script>
-        // 初始化周次数据
-        let schedules = {
-            1: [],
-            2: [],
-            3: [],
-            4: []
-        };
+        // 初始化数据
+        let scheduleData = {};
 
-        // 周次切换
-        document.getElementById('weekSelect').addEventListener('change', function() {
-            loadSchedule(this.value);
+        // 月份选择监听
+        document.getElementById('monthPicker').addEventListener('change', function() {
+            generateCalendar(new Date(this.value));
         });
 
-        // 加载课表
-        function loadSchedule(week) {
-            // 此处可以添加加载逻辑
-            console.log(`加载第 ${week} 周课表`);
+        // 生成日历
+        function generateCalendar(date) {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const days = new Date(year, month + 1, 0).getDate();
+
+            for (let day = 1; day <= days; day++) {
+                const dayDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+                dayCard.innerHTML = `
+                    <div class="day-header">
+                        <span>${dayDate}</span>
+                        <button class="add-btn" onclick="addTimeSlot('${dayDate}')">+ 添加时段</button>
+                    </div>
+                    <div id="slots-${dayDate}"></div>
+                `;
+                
+                calendar.appendChild(dayCard);
+                loadDaySchedule(dayDate);
+            }
         }
 
-        // 自动添加新行
-        document.addEventListener('change', function(e) {
-            if(e.target.tagName === 'INPUT' && 
-               e.target.closest('tr') === document.querySelector('tbody tr:last-child')) {
-                addNewRow();
-            }
-        });
-
-        function addNewRow() {
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td data-label="时间"><input type="time"></td>
-                <td data-label="学生"><input type="text" placeholder="姓名"></td>
-                <td data-label="地点"><input type="text" placeholder="地址"></td>
-                <td data-label="内容"><input type="text" placeholder="课程主题"></td>
+        // 添加时间段
+        function addTimeSlot(dayDate) {
+            const container = document.getElementById(`slots-${dayDate}`);
+            const slot = document.createElement('div');
+            slot.className = 'time-slot';
+            slot.innerHTML = `
+                <input type="time">
+                <input type="text" placeholder="学生姓名">
+                <input type="text" placeholder="上课地点">
+                <input type="text" placeholder="课程内容">
             `;
-            document.getElementById('scheduleBody').appendChild(newRow);
+            container.appendChild(slot);
+        }
+
+        // 加载某天课程
+        function loadDaySchedule(dayDate) {
+            // 这里可以添加加载逻辑
         }
 
         // 初始化
-        addNewRow();
+        generateCalendar(new Date());
     </script>
 </body>
 </html>
