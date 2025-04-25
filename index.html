@@ -2,101 +2,187 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>物理课程日历</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>sineleo的物理课表</title>
     <style>
+        :root {
+            --primary-color: #007AFF;
+            --danger-color: #ff3b30;
+            --text-color: #333;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
-            padding: 15px;
-            background-color: #f5f5f5;
+            padding: 10px;
+            background: #f8f9fa;
+            color: var(--text-color);
         }
 
+        /* 日历容器 */
         .calendar-container {
             background: white;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
+        /* 头部导航 */
         .calendar-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 15px;
+            padding: 0 8px;
         }
 
-        .calendar-nav button {
-            padding: 8px 12px;
+        .month-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .nav-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--primary-color);
             border: none;
-            background: #007AFF;
             color: white;
-            border-radius: 6px;
-            margin: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
         }
 
+        /* 日期网格 */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
+            gap: 4px;
         }
 
+        /* 单个日期块 */
         .calendar-day {
-            min-height: 100px;
-            border: 1px solid #eee;
+            min-height: 90px;
+            border: 1px solid #f0f0f0;
             padding: 8px;
-            position: relative;
+            border-radius: 12px;
             background: white;
+            position: relative;
         }
 
         .day-number {
             position: absolute;
-            top: 3px;
-            right: 5px;
+            top: 4px;
+            right: 6px;
+            font-size: 0.9rem;
             color: #666;
         }
 
+        /* 课程事件 */
         .event-item {
-            background: #e3f2fd;
-            padding: 5px;
-            margin: 3px 0;
-            border-radius: 4px;
-            font-size: 0.9em;
+            background: #e8f3ff;
+            padding: 6px;
+            margin: 4px 0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            position: relative;
         }
 
         .event-time {
-            color: #007AFF;
-            font-weight: bold;
+            color: var(--primary-color);
+            font-weight: 500;
+            display: block;
+            margin-bottom: 2px;
         }
 
+        .event-student {
+            font-weight: 500;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 删除按钮 */
         .delete-btn {
-            color: #ff3b30;
-            float: right;
-            background: none;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
             border: none;
-            padding: 0 5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .add-event-form {
-            margin-top: 10px;
+        /* 添加表单 */
+        .add-form {
+            margin-top: 8px;
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 5px;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
         }
 
-        input, select {
+        .add-form input {
+            width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-size: 0.9rem;
         }
 
-        @media (max-width: 600px) {
+        .add-form button {
+            grid-column: span 2;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 480px) {
             .calendar-grid {
                 grid-template-columns: repeat(1, 1fr);
+                gap: 8px;
             }
-            
+
             .calendar-day {
                 min-height: auto;
+                padding: 12px;
+            }
+
+            .day-number {
+                font-size: 1rem;
+                top: 8px;
+                right: 8px;
+            }
+
+            .event-item {
+                padding: 8px;
+                margin: 6px 0;
+            }
+
+            .add-form {
+                grid-template-columns: 1fr;
+            }
+
+            .add-form button {
+                grid-column: span 1;
+                padding: 10px;
+            }
+
+            .nav-button {
+                width: 40px;
+                height: 40px;
             }
         }
     </style>
@@ -104,67 +190,66 @@
 <body>
     <div class="calendar-container">
         <div class="calendar-header">
-            <h2 id="currentMonth">2024年7月</h2>
-            <div class="calendar-nav">
-                <button onclick="changeMonth(-1)">←</button>
-                <button onclick="changeMonth(1)">→</button>
-            </div>
+            <button class="nav-button" onclick="changeMonth(-1)">←</button>
+            <h2 class="month-title" id="currentMonth">2024年7月</h2>
+            <button class="nav-button" onclick="changeMonth(1)">→</button>
         </div>
         
         <div class="calendar-grid" id="calendar"></div>
     </div>
 
     <script>
-        let currentDate = new Date();
+        // 数据存储
         let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || {};
+        let currentDate = new Date();
 
         // 生成日历
-        function generateCalendar(date) {
+        function generateCalendar() {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
-            
-            const year = date.getFullYear();
-            const month = date.getMonth();
-            document.getElementById('currentMonth').textContent = `${year}年${month + 1}月`;
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            document.getElementById('currentMonth').textContent = 
+                `${year}年${month + 1}月`;
 
             // 生成日期数据
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const daysInMonth = lastDay.getDate();
-            
-            // 生成日历网格
-            for (let i = 0; i < firstDay.getDay(); i++) {
-                calendar.appendChild(createEmptyDay());
-            }
 
+            // 生成日期块
             for (let day = 1; day <= daysInMonth; day++) {
-                calendar.appendChild(createDayElement(year, month, day));
+                const dateStr = formatDate(year, month, day);
+                const dayElement = createDayElement(dateStr, day);
+                calendar.appendChild(dayElement);
             }
         }
 
         // 创建单个日期元素
-        function createDayElement(year, month, day) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayEvents = scheduleData[dateStr] || [];
+        function createDayElement(dateStr, day) {
+            const events = scheduleData[dateStr] || [];
             
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
             dayElement.innerHTML = `
                 <div class="day-number">${day}</div>
-                <div class="day-events" id="events-${dateStr}">
-                    ${dayEvents.map(event => `
+                <div class="day-events">
+                    ${events.map(event => `
                         <div class="event-item">
-                            <button class="delete-btn" onclick="deleteEvent('${dateStr}', ${event.id})">×</button>
+                            <button class="delete-btn" 
+                                onclick="deleteEvent('${dateStr}', ${event.id})">×</button>
                             <span class="event-time">${event.time}</span>
-                            <div>${event.student}</div>
-                            <small>${event.location}</small>
+                            <div class="event-student">${event.student}</div>
                         </div>
                     `).join('')}
                 </div>
-                <div class="add-event-form">
-                    <input type="time" id="time-${dateStr}">
-                    <input type="text" placeholder="姓名" id="student-${dateStr}">
-                    <button onclick="addEvent('${dateStr}')">+</button>
+                <div class="add-form">
+                    <input type="time" id="time-${dateStr}" 
+                        placeholder="时间">
+                    <input type="text" id="student-${dateStr}" 
+                        placeholder="学生">
+                    <button onclick="addEvent('${dateStr}')">添加课程</button>
                 </div>
             `;
             
@@ -180,52 +265,45 @@
 
             const newEvent = {
                 id: Date.now(),
-                time,
+                time: formatTime(time),
                 student,
-                location: document.getElementById(`location-${dateStr}`)?.value || '',
-                content: document.getElementById(`content-${dateStr}`)?.value || ''
+                location: '',
+                notes: ''
             };
 
             scheduleData[dateStr] = [...(scheduleData[dateStr] || []), newEvent];
             saveData();
-            refreshDay(dateStr);
+            generateCalendar();
         }
 
         // 删除课程
         function deleteEvent(dateStr, eventId) {
             scheduleData[dateStr] = scheduleData[dateStr]?.filter(e => e.id !== eventId);
             saveData();
-            refreshDay(dateStr);
+            generateCalendar();
         }
 
-        // 保存数据
-        function saveData() {
-            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+        // 辅助函数
+        function formatDate(year, month, day) {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         }
 
-        // 其他辅助函数
-        function createEmptyDay() {
-            const div = document.createElement('div');
-            div.className = 'calendar-day empty';
-            return div;
+        function formatTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            return `${hours}:${minutes}`;
         }
 
         function changeMonth(offset) {
             currentDate.setMonth(currentDate.getMonth() + offset);
-            generateCalendar(currentDate);
+            generateCalendar();
         }
 
-        function refreshDay(dateStr) {
-            const dayElement = document.querySelector(`#events-${dateStr}`).parentElement;
-            const newElement = createDayElement(
-                ...dateStr.split('-').map(Number),
-                dayElement.querySelector('.day-number').textContent
-            );
-            dayElement.parentElement.replaceChild(newElement, dayElement);
+        function saveData() {
+            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
         }
 
         // 初始化
-        generateCalendar(currentDate);
+        generateCalendar();
     </script>
 </body>
 </html>
