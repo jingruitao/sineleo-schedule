@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一对一物理课程表</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+        }
+
+        .week-selector {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .week-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: #007AFF;
+            color: white;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .time-slot {
+            position: relative;
+        }
+
+        .edit-btn {
+            padding: 6px 12px;
+            background-color: #34C759;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            float: right;
+        }
+
+        input[type="time"], input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 480px) {
+            th {
+                display: none;
+            }
+            
+            td {
+                display: block;
+                padding: 10px;
+            }
+            
+            td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: bold;
+                margin-right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="week-selector">
+        <select class="week-btn" id="weekSelect">
+            <option value="1">第1周</option>
+            <option value="2">第2周</option>
+            <option value="3">第3周</option>
+            <option value="4">第4周</option>
+        </select>
+    </div>
+
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>时间</th>
+                <th>学生姓名</th>
+                <th>上课地点</th>
+                <th>课程内容</th>
+            </tr>
+        </thead>
+        <tbody id="scheduleBody">
+            <!-- 示例数据 -->
+            <tr>
+                <td data-label="时间">
+                    <input type="time" value="16:00">
+                </td>
+                <td data-label="学生">
+                    <input type="text" placeholder="姓名">
+                </td>
+                <td data-label="地点">
+                    <input type="text" placeholder="地址">
+                </td>
+                <td data-label="内容">
+                    <input type="text" placeholder="课程主题">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        // 初始化周次数据
+        let schedules = {
+            1: [],
+            2: [],
+            3: [],
+            4: []
+        };
+
+        // 周次切换
+        document.getElementById('weekSelect').addEventListener('change', function() {
+            loadSchedule(this.value);
+        });
+
+        // 加载课表
+        function loadSchedule(week) {
+            // 此处可以添加加载逻辑
+            console.log(`加载第 ${week} 周课表`);
+        }
+
+        // 自动添加新行
+        document.addEventListener('change', function(e) {
+            if(e.target.tagName === 'INPUT' && 
+               e.target.closest('tr') === document.querySelector('tbody tr:last-child')) {
+                addNewRow();
+            }
+        });
+
+        function addNewRow() {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td data-label="时间"><input type="time"></td>
+                <td data-label="学生"><input type="text" placeholder="姓名"></td>
+                <td data-label="地点"><input type="text" placeholder="地址"></td>
+                <td data-label="内容"><input type="text" placeholder="课程主题"></td>
+            `;
+            document.getElementById('scheduleBody').appendChild(newRow);
+        }
+
+        // 初始化
+        addNewRow();
+    </script>
+</body>
+</html>
